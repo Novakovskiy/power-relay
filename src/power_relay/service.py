@@ -35,6 +35,8 @@ def detect_shutdown_kind() -> str:
         return "reboot"
     if "poweroff.target" in out or "halt.target" in out:
         return "poweroff"
+    if "shutdown.target" in out:
+        return "poweroff"
     return "unknown"
 
 
@@ -48,9 +50,20 @@ class UartPowerService:
     def stop(self) -> None:
         """Called on SIGTERM/SIGINT. Must be called before the system is down."""
         if not self._stop_event.is_set():
-            self._shutdown_kind = detect_shutdown_kind()
+            self._shutdown_kind = self._detect_shutdown_kind_with_retry()
             LOGGER.info("Stopping, system shutdown kind: %s", self._shutdown_kind)
         self._stop_event.set()
+
+    @staticmethod
+    def _detect_shutdown_kind_with_retry() -> str:
+        # On some shutdown paths (for example from web UI), SIGTERM can arrive
+        # slightly before shutdown jobs are visible in systemd.
+        for _ in range(10):
+            kind = detect_shutdown_kind()
+            if kind != "unknown":
+                return kind
+            time.sleep(0.2)
+        return "unknown"
 
     def run_forever(self) -> None:
         serial_cfg = self._config.serial
@@ -109,5 +122,8 @@ class UartPowerService:
         if self._shutdown_kind != "poweroff" or self._shutdown_requested_by_uart:
             return
         LOGGER.info("System is powering off, sending %s", CMD_POWER_OFF)
-        uart.write(f"{CMD_POWER_OFF}\n".encode("utf-8"))
-        uart.flush()
+        try:
+            uart.write(f"{CMD_POWER_OFF}\n".encode("utf-8"))
+            uart.flush()
+        except SerialException as exc:
+            LOGGER.error("Failed to notify UART about shutdown: %s", exc)
