@@ -1,0 +1,72 @@
+# Build directories
+build/
+dist/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# CMake
+CMakeUserPresets.json
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+cmake_install.cmake
+
+# Compilation artifacts
+*.elf
+*.bin
+*.map
+compile_commands.json
+
+# ESP-IDF specific
+sdkconfig.old
+sdkconfig~
+esp-idf/
+
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+dependencies.lock.old
+esp-mqtt/
+
+# Environment
+.env
+.env.local
+*.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+venv/
+env/
+
+# Temporary files
+*.tmp
+*.temp
+.git/
+
+# Node modules (if used for web assets)
+node_modules/
+package-lock.json
+yarn.lock
+

@@ -1,0 +1,9 @@
+[serial]
+# UART port to listen on
+port = /dev/ttyUSB0
+baudrate = 115200
+read_timeout_sec = 1.0
+
+[service]
+log_level = INFO
+reconnect_delay_sec = 3.0
