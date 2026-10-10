@@ -10,6 +10,7 @@ KLIPPER_CONFIG_DIR="${KLIPPER_CONFIG_DIR:-/home/$RUN_USER/printer_data/config}"
 VENV_DIR="${VENV_DIR:-$(dirname "${INSTALL_DIR}")/power-relay-env}"
 CONFIG_TARGET="${KLIPPER_CONFIG_DIR}/power-relay.cfg"
 MOONRAKER_CONF_PATH="${MOONRAKER_CONF_PATH:-${KLIPPER_CONFIG_DIR}/moonraker.conf}"
+MOONRAKER_ASVC_PATH="${MOONRAKER_ASVC_PATH:-$(dirname "${KLIPPER_CONFIG_DIR}")/moonraker.asvc}"
 SYSTEMD_UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
 UPDATE_SECTION_NAME="${UPDATE_SECTION_NAME:-update_manager ${SERVICE_NAME}}"
 
@@ -132,6 +133,18 @@ EOF
   echo "Added [${UPDATE_SECTION_NAME}] to ${MOONRAKER_CONF_PATH}."
 }
 
+ensure_moonraker_service_permission() {
+  echo "Ensuring Moonraker can manage ${SERVICE_NAME} in ${MOONRAKER_ASVC_PATH}..."
+  mkdir -p "$(dirname "${MOONRAKER_ASVC_PATH}")"
+  if [[ ! -f "${MOONRAKER_ASVC_PATH}" ]]; then
+    touch "${MOONRAKER_ASVC_PATH}"
+  fi
+  if ! grep -Fxq "${SERVICE_NAME}" "${MOONRAKER_ASVC_PATH}"; then
+    printf "%s\n" "${SERVICE_NAME}" >> "${MOONRAKER_ASVC_PATH}"
+  fi
+  chown "${RUN_USER}:${RUN_GROUP}" "${MOONRAKER_ASVC_PATH}" || true
+}
+
 install_systemd_unit() {
   echo "Installing systemd service ${SERVICE_NAME}..."
   cat > "${SYSTEMD_UNIT_PATH}" <<EOF
@@ -166,6 +179,7 @@ main() {
   install_venv "${py_bin}"
   install_config
   install_moonraker_update_section
+  ensure_moonraker_service_permission
   install_systemd_unit
   echo "Installation complete."
   echo "Project dir: ${INSTALL_DIR}"

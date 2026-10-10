@@ -55,7 +55,8 @@ The script re-runs itself through `sudo` when not started as root. It:
 2. Recreates `power-relay-env` and installs the package (Python 3.10+ required).
 3. Creates `power-relay.cfg` if missing. Existing file is kept.
 4. Adds `[update_manager power-relay]` to `moonraker.conf` (`type: git_repo`, `path`, `origin`, `primary_branch`, `managed_services: power-relay`, `install_script: install.sh`). If the section already exists, it is replaced.
-5. Creates, enables, and starts `power-relay.service`.
+5. Adds `power-relay` to `moonraker.asvc` so Moonraker can restart the service after updates.
+6. Creates, enables, and starts `power-relay.service`.
 
 For Moonraker updates, `origin` and branch are taken from the clone's git settings. Moonraker runs `git pull`, executes `install.sh`, and restarts the service. For this to work, the Moonraker user needs passwordless `sudo` (default in MainsailOS and KIAUH setups). After editing `moonraker.conf`, restart Moonraker.
 
@@ -68,8 +69,9 @@ bash uninstall.sh
 
 1. Stops and removes `power-relay.service`.
 2. Removes `[update_manager power-relay]` from `moonraker.conf`.
-3. Removes `power-relay-env`.
-4. Keeps `power-relay.cfg` and the project directory.
+3. Removes `power-relay` from `moonraker.asvc`.
+4. Removes `power-relay-env`.
+5. Keeps `power-relay.cfg` and the project directory.
 
 ## Environment variables
 
@@ -83,6 +85,7 @@ RUN_USER=pi \
 RUN_GROUP=pi \
 KLIPPER_CONFIG_DIR=/home/pi/printer_data/config \
 MOONRAKER_CONF_PATH=/home/pi/printer_data/config/moonraker.conf \
+MOONRAKER_ASVC_PATH=/home/pi/printer_data/moonraker.asvc \
 sudo -E bash install.sh
 ```
 
